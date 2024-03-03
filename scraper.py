@@ -1,5 +1,6 @@
 import requests
 import random
+import json
 from bs4 import BeautifulSoup
 from requests.exceptions import RequestException
 from data_saver import save_data_to_json
@@ -77,6 +78,17 @@ def scrape_amazon(query):
 
     return products
 
+def save_data_to_json(data, filename):
+    with open(filename, 'w') as json_file:
+        json.dump(data, json_file, indent=4)
+
+
 if __name__ == "__main__":
     query = input("Enter your search query: ")
-    scrape_amazon(query)
+    scraped_data = scrape_amazon(query)
+    if scraped_data:
+        file_name = f"{query}.json"
+        save_data_to_json(scraped_data, file_name)
+        print(f"Scraped data saved to {file_name}")
+    else:
+        print("No data scraped.")
