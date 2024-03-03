@@ -1,10 +1,20 @@
 import requests
-import fake_useragent
+import random
 from bs4 import BeautifulSoup
+from requests.exceptions import RequestException
 from data_saver import save_data_to_json
+import logging
+import time
 
-# Set up the User-Agent rotation
-ua = fake_useragent.UserAgent()
+#User-Agent rotation
+user_agents = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
+    "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36"
+]
+
+#logging
+logging.basicConfig(filename='scraper.log', level=logging.ERROR)
 
 class Product:
     def __init__(self, title, price, total_reviews, image_url):
@@ -22,42 +32,51 @@ class Product:
         }
 
 def scrape_amazon(query):
-    base_url = f"https://www.amazon.com/s?k={query}&ref=nb_sb_noss_1"
+    base_url = f"https://www.amazon.com/s"
     products = []
 
     try:
-        headers = {
-            "User-Agent": ua.random,
-            "Accept-Language": "en-US,en;q=0.5",  # Adding accept language header
-            "Referer": "https://www.google.com/"  # Adding referer header
-        }
         for page in range(1, 21):  # Scraping first 20 pages
             params = {
                 "k": query,
+                "ref": "nb_sb_noss_1",
                 "page": page
             }
             print(f"Scraping page {page} for query '{query}'")
+            headers = {
+                "User-Agent": random.choice(user_agents),
+                "Accept-Language": "en-US,en;q=0.5",  
+                "Referer": "https://www.google.com/"  
+            }
             response = requests.get(base_url, params=params, headers=headers)
-            if response.status_code == 200:
-                soup = BeautifulSoup(response.content, "html.parser")
-                product_blocks = soup.find_all("div", {"data-component-type": "s-search-result"})
-                if not product_blocks:
-                    print(f"No product blocks found on page {page} for query '{query}'")
-                    break  # Stop scraping further pages
+            response.raise_for_status()  # Raise an exception for status codes
+            soup = BeautifulSoup(response.content, "html.parser")
+            product_blocks = soup.find_all("div", {"data-component-type": "s-search-result"})
+            if not product_blocks:
+                print(f"No product blocks found on page {page} for query '{query}'")
+            else:
                 print(f"Number of products found on page {page}: {len(product_blocks)}")
                 for block in product_blocks:
                     try:
-                        title = block.find("h2").text.strip()
-                        price = block.find("span", {"class": "a-offscreen"}).text.strip()
-                        total_reviews = block.find("a", {"class": "a-popover-trigger"}).find("span", {"class": "a-icon-alt"}).text.strip()
+                        title = block.find("span", {"class": "a-size-medium"}).text.strip()
+                        price = block.find("span", {"class": "a-price-whole"}).text.strip()
+                        total_reviews = block.find("span", {"class": "a-size-base"}).text.strip()
                         image_url = block.find("img", {"class": "s-image"})["src"]
                         product = Product(title, price, total_reviews, image_url)
-                        products.append(product.to_dict())  # Convert product to dictionary
+                        products.append(product.to_dict()) 
+                        if len(products) == 10:
+                            break
                     except AttributeError as e:
-                        print(f"Error parsing product on page {page}: {e}")
-            else:
-                print(f"Failed to fetch page {page} for query '{query}'. Status code: {response.status_code}")
+                        logging.error(f"Error parsing product on page {page}: {e}")
+                        continue
+            time.sleep(random.uniform(1, 3))  # Add a delay between requests
+    except RequestException as e:
+        logging.error(f"Request error occurred during scraping: {e}")
     except Exception as e:
-        print(f"Error occurred during scraping: {e}")
+        logging.error(f"An unexpected error occurred: {e}")
 
     return products
+
+if __name__ == "__main__":
+    query = input("Enter your search query: ")
+    scrape_amazon(query)
