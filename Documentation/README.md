@@ -2,7 +2,7 @@
 # Amazon Scraper
 
 ## Documentation Overview
-Amazon Scraper is a Python script designed to scrape product information from Amazon search results based on user queries. It extracts data such as product title, price, total reviews, and image URL, saving it to a JSON file for further analysis.
+Amazon Scraper is a Python script designed to scrape product information from Amazon search results based on user queries. It extracts data such as product title, price, total reviews, and image URL, saving it to a JSON file for further analysis. Additionally, logging functionality has been implemented to track errors and debugging information.
 
 ## Design Decisions
 ### User-Agent Rotation:
