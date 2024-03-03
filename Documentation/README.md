@@ -31,6 +31,8 @@ Various headers, including user agents, are experimented with to simulate reques
      pip install requests
      pip install fake_useragent
      pip install beautifulsoup4
+     pip install lxml
+     pip install fake-useragent
      ```
 
 4. **Navigate to the Script Directory:**
@@ -58,6 +60,13 @@ Various headers, including user agents, are experimented with to simulate reques
 - requests
 - fake_useragent
 - BeautifulSoup
+- lxml (optional)
+- fake_useragent
+- random
+- json
+- logging
+- time
+- os
 
 
 
