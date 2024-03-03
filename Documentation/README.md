@@ -18,16 +18,16 @@ Request frequency is regulated to avoid triggering anti-scraping mechanisms. The
 Various headers, including user agents, are experimented with to simulate requests from real web browsers and reduce the likelihood of detection.
 
 ## How to Run the Script
-1. Clone the repository to your local machine.
-2 Run the script by executing `python scraper.py`.
-3. Enter your search query when prompted.
-4. The script will scrape Amazon search results for the specified query and save the data to a JSON file.
+1. Open the folder by "Open with VS code"
+2. Open new terminal.
+3 Run the script by executing `python scraper.py`.
+4. Enter your search query when prompted.
+5. The script will scrape Amazon search results for the specified query and save the data to a JSON file.
 
 ## Dependencies
 - requests
 - fake_useragent
 - BeautifulSoup
 
-## Contributing
-Contributions, such as bug reports, feature requests, and pull requests, are welcome! 
+
 
