@@ -3,18 +3,18 @@ import random
 import json
 from bs4 import BeautifulSoup
 from requests.exceptions import RequestException
-from data_saver import save_data_to_json
 import logging
 import time
+import os
 
-#User-Agent rotation
+# User-Agent rotation
 user_agents = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
     "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0",
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36"
 ]
 
-#logging
+# Logging
 logging.basicConfig(filename='scraper.log', level=logging.ERROR)
 
 class Product:
@@ -79,9 +79,12 @@ def scrape_amazon(query):
     return products
 
 def save_data_to_json(data, filename):
-    with open(filename, 'w') as json_file:
+    data_folder = "data"
+    os.makedirs(data_folder, exist_ok=True)  # Create the "data" folder if it doesn't exist
+    filepath = os.path.join(data_folder, filename)
+    with open(filepath, 'w') as json_file:
         json.dump(data, json_file, indent=4)
-
+    print(f"Data saved to {filepath} successfully.")
 
 if __name__ == "__main__":
     query = input("Enter your search query: ")
@@ -89,6 +92,5 @@ if __name__ == "__main__":
     if scraped_data:
         file_name = f"{query}.json"
         save_data_to_json(scraped_data, file_name)
-        print(f"Scraped data saved to {file_name}")
     else:
         print("No data scraped.")
