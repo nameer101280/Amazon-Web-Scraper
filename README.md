@@ -31,4 +31,4 @@ Various headers, including user agents, are experimented with to simulate reques
 Contributions, such as bug reports, feature requests, and pull requests, are welcome! 
 
 ## License
-This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the Creative Commons Attribution-NonCommercial (CC BY-NC) license. See the [LICENSE](LICENSE) file for details.
