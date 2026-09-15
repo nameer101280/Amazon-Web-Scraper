@@ -1,0 +1,11 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Virtual environment
+.venv/
+venv/
+
+# Local analysis output - reports stay on the machine, not in the repo
+BASELINE_REPORT.md
