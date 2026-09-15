@@ -1,0 +1,13 @@
+{
+  "target": "live amazon.com",
+  "mode": "sequential",
+  "pages": 20,
+  "delay_range": [
+    1,
+    3
+  ],
+  "wall_seconds": 65.15,
+  "pages_per_second": 0.31,
+  "products": 342,
+  "generated": "2026-09-15 20:39:07"
+}

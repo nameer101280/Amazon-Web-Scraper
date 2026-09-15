@@ -1,5 +1,6 @@
 import requests
 import random
+import re
 import json
 from bs4 import BeautifulSoup
 from requests.exceptions import RequestException
@@ -17,27 +18,43 @@ user_agents = [
 # Logging
 logging.basicConfig(filename='scraper.log', level=logging.ERROR)
 
-class Product:
-    def __init__(self, title, price, total_reviews, image_url):
-        self.title = title
-        self.price = price
-        self.total_reviews = total_reviews
-        self.image_url = image_url
+RATINGS_LABEL = re.compile(r"[\d,]+\s+ratings?")
 
-    def to_dict(self):
-        return {
-            "title": self.title,
-            "price": self.price,
-            "total_reviews": self.total_reviews,
-            "image_url": self.image_url
-        }
 
-def scrape_amazon(query):
-    base_url = f"https://www.amazon.com/s"
+def parse_products(html):
+    """Extract product dicts from an Amazon search-results page."""
+    soup = BeautifulSoup(html, "html.parser")
+    products = []
+    for block in soup.find_all("div", {"data-component-type": "s-search-result"}):
+        heading = block.find("h2")
+        title = heading.get_text(strip=True) if heading else None
+        if not title:
+            continue
+        price_tag = block.select_one("span.a-price span.a-offscreen")
+        reviews_tag = block.find("a", attrs={"aria-label": RATINGS_LABEL})
+        image_tag = block.find("img", {"class": "s-image"})
+        products.append({
+            "title": title,
+            "price": price_tag.get_text(strip=True) if price_tag else None,
+            "total_reviews": re.sub(r"\D", "", reviews_tag["aria-label"]) if reviews_tag else None,
+            "image_url": image_tag["src"] if image_tag else None,
+        })
+    return products
+
+
+AMAZON_SEARCH_URL = "https://www.amazon.com/s"
+
+
+def scrape_amazon(query, base_url=AMAZON_SEARCH_URL, pages=20, delay_range=(1, 3)):
+    """Scrape `pages` of search results for `query`, one page at a time.
+
+    base_url and delay_range are injectable so benchmarks can point at a
+    local server and control the politeness delay.
+    """
     products = []
 
     try:
-        for page in range(1, 21):  # Scraping first 20 pages
+        for page in range(1, pages + 1):
             params = {
                 "k": query,
                 "ref": "nb_sb_noss_1",
@@ -51,26 +68,14 @@ def scrape_amazon(query):
             }
             response = requests.get(base_url, params=params, headers=headers)
             response.raise_for_status()  # Raise an exception for status codes
-            soup = BeautifulSoup(response.content, "html.parser")
-            product_blocks = soup.find_all("div", {"data-component-type": "s-search-result"})
-            if not product_blocks:
+            page_products = parse_products(response.content)
+            if not page_products:
                 print(f"No product blocks found on page {page} for query '{query}'")
             else:
-                print(f"Number of products found on page {page}: {len(product_blocks)}")
-                for block in product_blocks:
-                    try:
-                        title = block.find("span", {"class": "a-size-medium"}).text.strip()
-                        price = block.find("span", {"class": "a-price-whole"}).text.strip()
-                        total_reviews = block.find("span", {"class": "a-size-base"}).text.strip()
-                        image_url = block.find("img", {"class": "s-image"})["src"]
-                        product = Product(title, price, total_reviews, image_url)
-                        products.append(product.to_dict()) 
-                        if len(products) == 10:
-                            break
-                    except AttributeError as e:
-                        logging.error(f"Error parsing product on page {page}: {e}")
-                        continue
-            time.sleep(random.uniform(1, 3))  # Add a delay between requests
+                print(f"Number of products found on page {page}: {len(page_products)}")
+                products.extend(page_products)
+            if delay_range[1] > 0:
+                time.sleep(random.uniform(*delay_range))  # Add a delay between requests
     except RequestException as e:
         logging.error(f"Request error occurred during scraping: {e}")
     except Exception as e:
