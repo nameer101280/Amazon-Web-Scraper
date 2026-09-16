@@ -7,5 +7,12 @@ __pycache__/
 .venv/
 venv/
 
+# Runtime log
+scraper.log
+
 # Local analysis output - reports stay on the machine, not in the repo
 BASELINE_REPORT.md
+COMPARISON_REPORT.md
+BEFORE_AFTER.md
+EMAIL.txt
+*.pdf
