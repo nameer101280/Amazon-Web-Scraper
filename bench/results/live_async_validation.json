@@ -1,0 +1,14 @@
+{
+  "target": "live amazon.com",
+  "mode": "async",
+  "concurrency": 5,
+  "pages": 20,
+  "delay_range": [
+    0,
+    0
+  ],
+  "wall_seconds": 5.68,
+  "products": 336,
+  "failed_pages": 0,
+  "generated": "2026-09-15 21:32:55"
+}

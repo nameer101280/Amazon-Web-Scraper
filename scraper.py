@@ -20,6 +20,24 @@ logging.basicConfig(filename='scraper.log', level=logging.ERROR)
 
 RATINGS_LABEL = re.compile(r"[\d,]+\s+ratings?")
 
+# Akamai Bot Manager serves its challenge at HTTP 200, so status codes cannot
+# be used to spot it. These markers appear in the challenge body and not in a
+# real results page.
+BOT_CHECK_MARKERS = (b"bm-verify", b"/errors/validateCaptcha", b"api-services-support@amazon.com")
+
+
+class BotCheckError(Exception):
+    """Amazon answered with a bot-verification challenge instead of results."""
+
+
+def is_bot_check(html):
+    """True if this response is a bot challenge rather than search results.
+
+    A challenge body is ~2 KB against ~900 KB for a real page, but size alone
+    is circumstantial, so the marker has to be present too.
+    """
+    return any(marker in html for marker in BOT_CHECK_MARKERS)
+
 
 def parse_products(html):
     """Extract product dicts from an Amazon search-results page."""
@@ -68,6 +86,12 @@ def scrape_amazon(query, base_url=AMAZON_SEARCH_URL, pages=20, delay_range=(1, 3
             }
             response = requests.get(base_url, params=params, headers=headers)
             response.raise_for_status()  # Raise an exception for status codes
+            if is_bot_check(response.content):
+                raise BotCheckError(
+                    f"Amazon served a bot-verification page for page {page} "
+                    f"(HTTP {response.status_code}, {len(response.content)} bytes). "
+                    f"This is rate limiting, not an empty result set - wait and retry."
+                )
             page_products = parse_products(response.content)
             if not page_products:
                 print(f"No product blocks found on page {page} for query '{query}'")
@@ -76,6 +100,9 @@ def scrape_amazon(query, base_url=AMAZON_SEARCH_URL, pages=20, delay_range=(1, 3
                 products.extend(page_products)
             if delay_range[1] > 0:
                 time.sleep(random.uniform(*delay_range))  # Add a delay between requests
+    except BotCheckError as e:
+        logging.error(f"Blocked: {e}")
+        raise
     except RequestException as e:
         logging.error(f"Request error occurred during scraping: {e}")
     except Exception as e:
