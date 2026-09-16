@@ -23,7 +23,7 @@ The "before" timing is the original sequential fetch layer *after* the selector 
 
 ## Install
 
-Tested on Python 3.14.
+Requires Python 3.10 or newer — the minimum declared by `requests`, `pytest` and other dependencies. Tested on 3.14.
 
 ```bash
 python -m venv .venv
