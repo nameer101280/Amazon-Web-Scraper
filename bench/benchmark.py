@@ -12,6 +12,8 @@ Two delay settings are measured, because they answer different questions:
             number that a concurrency change can actually move.
 """
 import argparse
+import contextlib
+import io
 import json
 import pathlib
 import statistics
@@ -43,16 +45,11 @@ def measure(label, delay_range, query, pages, repeats, latency, quiet=True):
     times, counts, requests = [], [], []
     for i in range(repeats):
         with MockAmazonServer(latency=latency) as server:
-            if quiet:
-                buf, sys.stdout = sys.stdout, open("/dev/null", "w")
-            try:
+            sink = io.StringIO() if quiet else sys.stdout
+            with contextlib.redirect_stdout(sink):
                 elapsed, products = run_sequential(
                     server.base_url, query, pages, delay_range
                 )
-            finally:
-                if quiet:
-                    sys.stdout.close()
-                    sys.stdout = buf
             times.append(elapsed)
             counts.append(len(products))
             requests.append(server.request_count)

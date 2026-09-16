@@ -1,0 +1,4 @@
+# Saved Amazon result pages used as test and benchmark fixtures. They are
+# ~4.7 MB of third-party HTML, so without this GitHub reports the repository
+# as almost entirely HTML.
+bench/fixtures/*.html linguist-vendored
